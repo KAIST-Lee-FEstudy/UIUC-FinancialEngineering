@@ -14,7 +14,7 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 
 [sigma,r,div,s0,Barrier_level,cpn_rate,FV,upper_ratio,S_node,T_node,T]=\
-[0.25,0.025,0.007,195.09,0.78,0.020375,1000,2,100,260,1.25]
+[0.25,0.025,0.007,195.09,0.78,0.020375,1000,2,500,5000,1.25]
 issue_date = dt.date(2019,3,26)
 cpn_date = [dt.date(2019,6,26),dt.date(2019,9,26),dt.date(2019,12,27),dt.date(2020,3,26),dt.date(2020,6,25)]
 
@@ -50,9 +50,9 @@ def FDM_pricing(s0,r,div,sigma,Barrier_level,cpn_rate,FV,upper_ratio,S_node,T_no
         return xc  
     
     # Change coupon payment date to node 
-    cnp_node = []
+    cpn_node = []
     for i in range(len(cpn_date)):
-        cnp_node.append(int(((cpn_date[i]-issue_date).days/365)/d_t))
+        cpn_node.append(int(((cpn_date[i]-issue_date).days/365)/d_t))
         
     ## Boundary condition    
     FDM_value = np.zeros((S_node,T_node+1))
@@ -73,8 +73,8 @@ def FDM_pricing(s0,r,div,sigma,Barrier_level,cpn_rate,FV,upper_ratio,S_node,T_no
     # Upper boundary condition
     indexing = 0
     for i in range(T_node):
-        FDM_value[-1,i] = 1000*(1+cpn_rate) * np.exp(-(cnp_node[indexing] - i)*d_t)
-        if i>= cnp_node[indexing]:
+        FDM_value[-1,i] = 1000*(1+cpn_rate) * np.exp(-(cpn_node[indexing] - i)*d_t)
+        if i>= cpn_node[indexing]:
             indexing = indexing +1
     
     FDM_LU_value = FDM_value.copy()         
@@ -117,7 +117,7 @@ def FDM_pricing(s0,r,div,sigma,Barrier_level,cpn_rate,FV,upper_ratio,S_node,T_no
             FDM_LU_value[:,i] = np.linalg.solve(x,d)
         else: pass    
            
-        if i in cnp_node[1:-1]:
+        if i in cpn_node[1:-1]:
             
             if method == 'EFDM':
                FDM_value[barrier_node:,i] += FV*cpn_rate
@@ -180,11 +180,11 @@ value_matrix = result[0]
 # Computational domain
 s = np.linspace(0 , s0*upper_ratio , S_node)
 t = np.linspace(0,T, T_node+1)
-
 tnew,snew = np.meshgrid(t,s)
+#%%
 fig = plt.figure(1)
 ax = fig.gca(projection='3d')
-surface = ax.plot_surface(tnew,snew,value_matrix,cmap = cm.coolwarm)
+ax.plot_surface(tnew,snew,value_matrix,cmap = cm.coolwarm)
 plt.xlabel('Time nodes(0 to Maturity)')
 plt.ylabel('Stock nodes')
 plt.title('FDM price surface')
